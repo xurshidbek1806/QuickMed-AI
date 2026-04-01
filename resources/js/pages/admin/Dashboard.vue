@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Building2, Stethoscope, Users, Image, TrendingUp } from 'lucide-vue-next';
+import { Building2, Stethoscope, Users, Image, TrendingUp, Info } from 'lucide-vue-next';
 import { Link } from '@inertiajs/vue3';
 
 const props = defineProps<{
-    stats: { clinics: number; diseases: number; doctors: number; banners: number; users: number }
+    stats: { clinics: number; diseases: number; doctors: number; banners: number; users: number; recommendations: number }
 }>();
 
 const cards = [
@@ -11,7 +11,8 @@ const cards = [
     { label: 'Kasalliklar',  value: props.stats.diseases, icon: Stethoscope,  bg: 'bg-violet-100 dark:bg-violet-900/30', text: 'text-violet-500',  href: '/admin/diseases'  },
     { label: 'Shifokorlar',  value: props.stats.doctors,  icon: Users,        bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-500', href: '/admin/doctors'   },
     { label: 'Bannerlar',    value: props.stats.banners,  icon: Image,        bg: 'bg-amber-100 dark:bg-amber-900/30',   text: 'text-amber-500',   href: '/admin/banners'   },
-    { label: 'Admin foydalanuvchilar', value: props.stats.users, icon: TrendingUp, bg: 'bg-rose-100 dark:bg-rose-900/30', text: 'text-rose-500', href: '#' },
+    { label: 'Foydalanuvchilar', value: props.stats.users, icon: TrendingUp, bg: 'bg-rose-100 dark:bg-rose-900/30', text: 'text-rose-500', href: '/admin/users' },
+    { label: 'Tavsiyalar', value: props.stats.recommendations, icon: Stethoscope, bg: 'bg-teal-100 dark:bg-teal-900/30', text: 'text-teal-500', href: '/admin/recommendations' },
 ];
 </script>
 
@@ -47,10 +48,12 @@ const cards = [
                     <Link href="/admin/diseases/create" class="flex items-center gap-2 text-sm text-sky-600 hover:underline">+ Yangi kasallik qo'shish</Link>
                     <Link href="/admin/doctors/create" class="flex items-center gap-2 text-sm text-sky-600 hover:underline">+ Yangi shifokor qo'shish</Link>
                     <Link href="/admin/banners/create" class="flex items-center gap-2 text-sm text-sky-600 hover:underline">+ Yangi banner qo'shish</Link>
+                    <Link href="/admin/users/create" class="flex items-center gap-2 text-sm text-sky-600 hover:underline">+ Yangi foydalanuvchi qo'shish</Link>
+                    <Link href="/admin/recommendations/create" class="flex items-center gap-2 text-sm text-sky-600 hover:underline">+ Yangi tavsiya qo'shish</Link>
                 </div>
             </div>
             <div class="p-5 rounded-2xl bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800">
-                <h2 class="font-semibold text-sky-800 dark:text-sky-200 mb-3">ℹ️ Qo'llanma</h2>
+                <h2 class="font-semibold text-sky-800 dark:text-sky-200 mb-3 flex items-center gap-1.5"><Info class="size-4" /> Qo'llanma</h2>
                 <ol class="space-y-1.5 text-sm text-sky-700 dark:text-sky-300 list-decimal ml-4">
                     <li>Yangi shifoxona yarating (admin akkaunt avtomatik yaratiladi)</li>
                     <li>Shifoxona admini kasalliklar va shifokorlar qo'shadi</li>

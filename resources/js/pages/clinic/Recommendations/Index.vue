@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { Plus, Pencil, Trash2 } from 'lucide-vue-next';
+import { Plus, Pencil, Trash2, Bug, Stethoscope } from 'lucide-vue-next';
 
 const props = defineProps<{
     recommendations: {
@@ -44,10 +44,10 @@ function destroy(id: string) {
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 flex-wrap mb-2">
                             <span v-if="r.disease" class="px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400 text-xs font-medium">
-                                🦠 {{ r.disease.name }}
+                                <Bug class="size-3 inline mr-0.5" /> {{ r.disease.name }}
                             </span>
                             <span v-if="r.doctor" class="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-medium">
-                                👨‍⚕️ {{ r.doctor.name }}
+                                <Stethoscope class="size-3 inline mr-0.5" /> {{ r.doctor.name }}
                             </span>
                             <span class="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs">
                                 Ustuvorlik: {{ r.priority }}

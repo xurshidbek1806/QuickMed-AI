@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { Plus, Pencil, Trash2 } from 'lucide-vue-next';
+import { Plus, Pencil, Trash2, ImageIcon, Video, FileText, File } from 'lucide-vue-next';
 
 const props = defineProps<{
     banners: {
@@ -13,7 +13,7 @@ const props = defineProps<{
 const base = props.baseUrl ?? '/admin/banners';
 
 const positionLabel: Record<string, string> = { sidebar: 'Sidebar', top: 'Yuqori', chat: 'Chat' };
-const typeLabel: Record<string, string> = { image: '🖼️ Rasm', video: '🎬 Video', text: '📝 Matn' };
+const typeLabel: Record<string, string> = { image: 'Rasm', video: 'Video', text: 'Matn' };
 
 function destroy(id: number, name: string) {
     if (confirm(`"${name}" bannerni o'chirishni tasdiqlaysizmi?`)) {
@@ -46,7 +46,9 @@ function destroy(id: number, name: string) {
                 <div class="aspect-video bg-gray-100 dark:bg-gray-700 relative">
                     <img v-if="b.media_url && b.media_type !== 'video'" :src="b.media_url" class="size-full object-cover" />
                     <video v-else-if="b.media_url" :src="b.media_url" class="size-full object-cover" muted />
-                    <div v-else class="size-full flex items-center justify-center text-gray-400 text-3xl">{{ typeLabel[b.media_type] ?? '📄' }}</div>
+                    <div v-else class="size-full flex items-center justify-center text-gray-400">
+                        <component :is="b.media_type === 'video' ? Video : b.media_type === 'image' ? ImageIcon : FileText" class="size-8" />
+                    </div>
                     <span class="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[11px] font-medium bg-black/60 text-white">
                         {{ positionLabel[b.position] }}
                     </span>

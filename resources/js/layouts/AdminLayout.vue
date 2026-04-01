@@ -16,6 +16,8 @@ const nav = [
     { label: 'Kasalliklar', href: '/admin/diseases', icon: Stethoscope },
     { label: 'Shifokorlar', href: '/admin/doctors', icon: Users },
     { label: 'Bannerlar', href: '/admin/banners', icon: Image },
+    { label: 'Foydalanuvchilar', href: '/admin/users', icon: Users },
+    { label: 'Tavsiyalar', href: '/admin/recommendations', icon: HeartPulse },
 ];
 
 function isActive(href: string) {
