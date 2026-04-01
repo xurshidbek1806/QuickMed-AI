@@ -23,4 +23,16 @@ export default defineConfig({
         }),
         ...(process.env.SKIP_WAYFINDER ? [] : [wayfinder({ formVariants: true })]),
     ],
+    build: {
+        target: 'es2020',
+        cssMinify: 'lightningcss',
+        rollupOptions: {
+            output: {
+                manualChunks(id: string) {
+                    if (id.includes('node_modules/vue') || id.includes('@inertiajs/vue3')) return 'vue';
+                    if (id.includes('lucide-vue-next')) return 'icons';
+                },
+            },
+        },
+    },
 });
