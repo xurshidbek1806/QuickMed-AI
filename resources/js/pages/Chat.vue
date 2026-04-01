@@ -3,7 +3,9 @@ import { ref, computed, nextTick, onMounted } from 'vue';
 import {
     Send, Mic, MicOff, StopCircle, RotateCcw, Phone, MapPin,
     ChevronLeft, ChevronRight, Loader2, HeartPulse, User, Bot,
-    Volume2, AlertTriangle, ExternalLink, Check
+    Volume2, AlertTriangle, ExternalLink, Check, Baby, PersonStanding,
+    UserRound, Users, UserCog, UserCheck, Cross, Bug, Calendar,
+    FileText, Crosshair, PenLine, MicVocal
 } from 'lucide-vue-next';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -53,12 +55,12 @@ const audioChunks   = ref<Blob[]>([]);
 const transcribing  = ref(false);
 
 const AGE_CATEGORIES = [
-    { value: 'godak',     label: "Chaqaloq",       desc: '0-1 yosh',   icon: '👶' },
-    { value: 'bola',      label: 'Bola',            desc: '1-12 yosh',  icon: '🧒' },
-    { value: 'osmir',     label: 'O\'smir',         desc: '12-18 yosh', icon: '🧑' },
-    { value: 'yoshlar',   label: 'Yoshlar',          desc: '18-30 yosh', icon: '👨' },
-    { value: 'orta_yosh', label: 'O\'rta yosh',     desc: '30-60 yosh', icon: '🧔' },
-    { value: 'keksalar',  label: 'Keksalar',         desc: '60+ yosh',   icon: '👴' },
+    { value: 'godak',     label: "Chaqaloq",       desc: '0-1 yosh',   icon: Baby },
+    { value: 'bola',      label: 'Bola',            desc: '1-12 yosh',  icon: PersonStanding },
+    { value: 'osmir',     label: 'O\'smir',         desc: '12-18 yosh', icon: UserRound },
+    { value: 'yoshlar',   label: 'Yoshlar',          desc: '18-30 yosh', icon: User },
+    { value: 'orta_yosh', label: 'O\'rta yosh',     desc: '30-60 yosh', icon: UserCog },
+    { value: 'keksalar',  label: 'Keksalar',         desc: '60+ yosh',   icon: UserCheck },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -83,12 +85,12 @@ function removeLastIfLoading() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 onMounted(() => {
     addAI(
-        "Assalomu alaykum! Men QuickMedAI — sog'liqni saqlash bo'yicha virtual yordamchiman. 🏥\n\nMen sizga tibbiy ma'lumotlar asosida tavsiya beraman. Keling, boshlaylik.",
+        "Assalomu alaykum! Men QuickMedAI \u2014 sog'liqni saqlash bo'yicha virtual yordamchiman.\n\nMen sizga tibbiy ma'lumotlar asosida tavsiya beraman. Keling, boshlaylik.",
         {
             type: 'options',
             options: [
-                { label: '👨 Erkak', value: 'male' },
-                { label: '👩 Ayol',  value: 'female' },
+                { label: 'Erkak', value: 'male' },
+                { label: 'Ayol',  value: 'female' },
             ],
         }
     );
@@ -98,12 +100,12 @@ onMounted(() => {
 function selectGender(val: string) {
     if (step.value !== 'gender') return;
     gender.value = val;
-    const label = val === 'male' ? '👨 Erkak' : '👩 Ayol';
+    const label = val === 'male' ? 'Erkak' : 'Ayol';
     addUser(label);
     step.value = 'age';
     addAI('Yaxshi! Endi yosh guruhingizni tanlang:', {
         type: 'options',
-        options: AGE_CATEGORIES.map(a => ({ label: `${a.icon} ${a.label}`, value: a.value })),
+        options: AGE_CATEGORIES.map(a => ({ label: a.label, value: a.value })),
     });
 }
 
@@ -112,7 +114,7 @@ function selectAge(val: string) {
     if (step.value !== 'age') return;
     ageCategory.value = val;
     const found = AGE_CATEGORIES.find(a => a.value === val);
-    addUser(`${found?.icon} ${found?.label} (${found?.desc})`);
+    addUser(`${found?.label} (${found?.desc})`);
     step.value = 'disease';
     loadDiseases(1);
 }
@@ -155,13 +157,13 @@ async function loadDiseases(page: number) {
 function selectDisease(d: Disease) {
     if (step.value !== 'disease') return;
     selectedDisease.value = d;
-    addUser(`🦠 ${d.name}`);
+    addUser(d.name);
     step.value = 'input_type';
     addAI(`"${d.name}" bo\'yicha belgilaringizni qanday aytmoqchisiz?`, {
         type: 'options',
         options: [
-            { label: '✍️ Matn yozaman',    value: 'text'  },
-            { label: '🎤 Ovoz bilan aytaman', value: 'voice' },
+            { label: 'Matn yozaman',    value: 'text'  },
+            { label: 'Ovoz bilan aytaman', value: 'voice' },
         ],
     });
 }
@@ -170,11 +172,11 @@ function selectDisease(d: Disease) {
 function selectInputType(val: string) {
     if (step.value !== 'input_type') return;
     if (val === 'text') {
-        addUser('✍️ Matn yozaman');
+        addUser('Matn yozaman');
         step.value = 'text_input';
         addAI('Belgilaringizni yozing. Masalan: "Boshim og\'riyapti, isitma bor, tomoqim achishmoqda..."');
     } else {
-        addUser('🎤 Ovoz bilan aytaman');
+        addUser('Ovoz bilan aytaman');
         step.value = 'voice_input';
         addAI('Mikrofon tugmasini bosib, belgilaringizni gapiring. Tugagach to\'xtatish tugmasini bosing.');
     }
@@ -231,7 +233,7 @@ async function sendVoice() {
             addAI(data.error ?? 'Ovozni tanib bo\'lmadi.', { type: 'error' });
         } else {
             symptoms.value = data.text;
-            addUser(`🎙️ "${data.text}"`);
+            addUser(`"${data.text}"`);
             step.value = 'analyzing';
             await analyze(data.text);
         }
@@ -292,8 +294,8 @@ function restart() {
     addAI("Yangi savol uchun tayyor! Jinsingizni tanlang:", {
         type: 'options',
         options: [
-            { label: '👨 Erkak', value: 'male' },
-            { label: '👩 Ayol',  value: 'female' },
+            { label: 'Erkak', value: 'male' },
+            { label: 'Ayol',  value: 'female' },
         ],
     });
 }
@@ -310,11 +312,11 @@ function getCsrf(): string {
 
 // ── Step Progress ─────────────────────────────────────────────────────────────
 const STEPS = [
-    { key: 'gender',     label: 'Jins',       icon: '👤' },
-    { key: 'age',        label: 'Yosh',       icon: '📅' },
-    { key: 'disease',    label: 'Kasallik',   icon: '🦠' },
-    { key: 'input',      label: 'Simptom',    icon: '✍️' },
-    { key: 'result',     label: 'Natija',     icon: '🎯' },
+    { key: 'gender',     label: 'Jins',       icon: UserRound },
+    { key: 'age',        label: 'Yosh',       icon: Calendar },
+    { key: 'disease',    label: 'Kasallik',   icon: Bug },
+    { key: 'input',      label: 'Simptom',    icon: PenLine },
+    { key: 'result',     label: 'Natija',     icon: Crosshair },
 ];
 
 const currentStepIndex = computed(() => {
@@ -366,7 +368,7 @@ const currentStepIndex = computed(() => {
                                     : 'bg-white/5 text-white/20 border border-white/5'
                         ]">
                             <Check v-if="i < currentStepIndex" class="size-3.5" />
-                            <span v-else>{{ s.icon }}</span>
+                            <component v-else :is="s.icon" class="size-3.5" />
                         </div>
                         <span :class="[
                             'text-[11px] font-medium hidden sm:inline transition-colors',
@@ -640,7 +642,7 @@ const currentStepIndex = computed(() => {
                 <!-- Disclaimer -->
                 <div class="mt-auto px-4 py-4 border-t border-white/10">
                     <p class="text-[11px] text-white/30 leading-relaxed">
-                        ⚕️ Bu platforma tibbiy maslahat o'rnini bosmaydi. Sog'liq muammolari uchun doimo malakali shifokorga murojaat qiling.
+                        <Cross class="size-3 inline-block mr-0.5" /> Bu platforma tibbiy maslahat o'rnini bosmaydi. Sog'liq muammolari uchun doimo malakali shifokorga murojaat qiling.
                     </p>
                 </div>
             </aside>
