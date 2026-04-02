@@ -9,18 +9,19 @@ set -e
 
 APP_DIR="/root/quickmedai"
 REPO_URL="https://gitlab.com/sysmasters/web/quickmedai.git"
+BRANCH="deploy"
 
 echo "🚀 QuickMedAI deploy boshlandi..."
 
 # ─── 1. Clone yoki pull ──────────────────────────────────────────
 if [ ! -d "$APP_DIR" ]; then
     echo "📦 Repo clone qilinmoqda..."
-    git clone "$REPO_URL" "$APP_DIR"
+    git clone -b "$BRANCH" "$REPO_URL" "$APP_DIR"
     cd "$APP_DIR"
 else
     echo "📥 Yangi kod olinmoqda..."
     cd "$APP_DIR"
-    git pull origin main
+    git pull origin "$BRANCH"
 fi
 
 # ─── 2. ENV fayllar ──────────────────────────────────────────────
