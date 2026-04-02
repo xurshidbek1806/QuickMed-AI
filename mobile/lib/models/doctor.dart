@@ -6,6 +6,7 @@ class Doctor {
   final String? photo;
   final String clinicName;
   final int? experience;
+  final String? locationUrl;
 
   Doctor({
     required this.id,
@@ -15,6 +16,7 @@ class Doctor {
     this.photo,
     required this.clinicName,
     this.experience,
+    this.locationUrl,
   });
 
   factory Doctor.fromJson(Map<String, dynamic> json) {
@@ -24,10 +26,11 @@ class Doctor {
       specialty: json['specialization'] ?? json['specialty'] ?? '',
       phone: json['phone_number'] ?? json['phone'],
       photo: json['photo'],
-      clinicName: json['clinic']?['name'] ?? json['clinic_name'] ?? '',
+      clinicName: json['clinic_name'] ?? json['clinic']?['name'] ?? '',
       experience: json['experience'] != null
           ? int.tryParse(json['experience'].toString())
           : null,
+      locationUrl: json['location_url'],
     );
   }
 }
@@ -50,7 +53,7 @@ class AnalysisResult {
               ?.map((d) => Doctor.fromJson(d))
               .toList() ??
           [],
-      diseaseName: json['disease_name'] ?? '',
+      diseaseName: json['disease']?['name'] ?? json['disease_name'] ?? '',
     );
   }
 }

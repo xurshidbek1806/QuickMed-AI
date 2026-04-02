@@ -32,7 +32,7 @@ Platformada ikki turdagi admin panel mavjud:
 
 ## Mobil ilova
 
-Hozirda QuickMedAI mobil ilovasi ustida ham ish olib borilmoqda. Mobil versiya React Native (Expo) asosida ishlab chiqilmoqda va asosiy chat funksiyasi, ovozli kiritish, shifokor va shifoxona tavsiyalari mobil qurilmalarda ham ishlaydi. Ilova iOS va Android uchun chiqariladi.
+Hozirda QuickMedAI mobil ilovasi ustida ham ish olib borilmoqda. Mobil versiya Flutter (Dart) asosida ishlab chiqilmoqda va asosiy chat funksiyasi, ovozli kiritish, shifokor va shifoxona tavsiyalari mobil qurilmalarda ham ishlaydi. Ilova iOS va Android uchun chiqariladi.
 
 ## Ishga tushirish
 

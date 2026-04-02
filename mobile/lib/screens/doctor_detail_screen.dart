@@ -13,9 +13,7 @@ class DoctorDetailScreen extends StatelessWidget {
   Future<void> _callDoctor() async {
     if (doctor.phone != null && doctor.phone!.isNotEmpty) {
       final uri = Uri.parse('tel:${doctor.phone}');
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
-      }
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 

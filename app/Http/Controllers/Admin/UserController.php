@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Clinic;
 use App\Models\User;
+use App\Traits\LogsAdminActions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -13,6 +14,7 @@ use Inertia\Response;
 
 class UserController extends Controller
 {
+    use LogsAdminActions;
     public function index(): Response
     {
         $users = User::with('clinic:id,name')
@@ -40,13 +42,15 @@ class UserController extends Controller
             'clinic_id' => ['nullable', 'uuid', 'exists:clinics,id'],
         ]);
 
-        User::create([
+        $user = User::create([
             'name'      => $data['name'],
             'email'     => $data['email'],
             'password'  => Hash::make($data['password']),
             'role'      => $data['role'],
             'clinic_id' => $data['role'] === 'clinic_admin' ? $data['clinic_id'] : null,
         ]);
+
+        $this->logCreate($user, ['name' => $data['name'], 'role' => $data['role']]);
 
         return redirect()->route('admin.users.index')->with('success', "Foydalanuvchi yaratildi.");
     }
@@ -80,6 +84,8 @@ class UserController extends Controller
             $user->update(['password' => Hash::make($data['password'])]);
         }
 
+        $this->logUpdate($user, ['name' => $data['name'], 'role' => $data['role']]);
+
         return redirect()->route('admin.users.index')->with('success', "Foydalanuvchi yangilandi.");
     }
 
@@ -89,6 +95,7 @@ class UserController extends Controller
             return redirect()->route('admin.users.index')->with('error', "O'zingizni o'chira olmaysiz.");
         }
 
+        $this->logDelete($user, ['name' => $user->name, 'email' => $user->email]);
         $user->delete();
         return redirect()->route('admin.users.index')->with('success', "Foydalanuvchi o'chirildi.");
     }

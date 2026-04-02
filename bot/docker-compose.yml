@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    container_name: quickmedai-bot
+    restart: unless-stopped
+    env_file: .env
+    networks:
+      - xurshid
+
+networks:
+  xurshid:
+    external: true

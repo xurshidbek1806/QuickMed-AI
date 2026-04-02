@@ -10,10 +10,13 @@ class ApiService {
   ApiService({String? baseUrl}) : baseUrl = baseUrl ?? ApiConfig.baseUrl;
 
   Future<List<DiseaseOption>> fetchDiseases({String? ageCategory}) async {
+    final queryParams = <String, String>{};
+    if (ageCategory != null) queryParams['age_category'] = ageCategory;
+    // Load all diseases (backend paginates at 12 by default)
+    queryParams['per_page'] = '100';
+
     final uri = Uri.parse('$baseUrl/api/diseases').replace(
-      queryParameters: {
-        if (ageCategory != null) 'age_category': ageCategory,
-      },
+      queryParameters: queryParams,
     );
     final response = await http.get(uri);
 
@@ -36,7 +39,6 @@ class ApiService {
       headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
       body: jsonEncode({
         'gender': gender,
-        'age': age,
         'age_category': age,
         'disease_id': diseaseId,
         'symptoms': symptoms,
@@ -55,13 +57,19 @@ class ApiService {
       'POST',
       Uri.parse('$baseUrl/api/chat/voice'),
     );
+    request.headers['Accept'] = 'application/json';
     request.files.add(await http.MultipartFile.fromPath('audio', filePath));
 
-    final response = await request.send();
-    if (response.statusCode == 200) {
+    try {
+      final response = await request.send();
       final body = await response.stream.bytesToString();
-      final data = jsonDecode(body);
-      return data['text'];
+      print('[Voice API] status=${response.statusCode} body=$body');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(body);
+        return data['text'];
+      }
+    } catch (e) {
+      print('[Voice API] error: $e');
     }
     return null;
   }

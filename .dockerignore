@@ -5,5 +5,10 @@ public/storage
 storage/logs/*.log
 .git/
 .env
+.env.production
 *.md
 tests/
+mobile/
+bot/
+oson-doktor-bot/
+quickmedai/

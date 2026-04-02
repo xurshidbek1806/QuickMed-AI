@@ -5,7 +5,7 @@ import {
     ChevronLeft, ChevronRight, Loader2, HeartPulse, User, Bot,
     Volume2, AlertTriangle, ExternalLink, Check, Baby, PersonStanding,
     UserRound, Users, UserCog, UserCheck, Cross, Bug, Calendar,
-    FileText, Crosshair, PenLine, MicVocal
+    FileText, Crosshair, PenLine, MicVocal, Search
 } from 'lucide-vue-next';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -330,60 +330,60 @@ const currentStepIndex = computed(() => {
 </script>
 
 <template>
-    <div class="h-screen flex flex-col bg-gradient-to-br from-slate-950 via-sky-950 to-slate-950 text-white overflow-hidden">
-        <!-- Header -->
-        <header class="shrink-0 px-4 sm:px-6 py-3 bg-white/5 backdrop-blur-xl border-b border-white/10 flex items-center gap-3">
+    <div class="h-screen flex flex-col bg-[#f8f9fb] overflow-hidden">
+        <!-- ─── Header ─────────────────────────────────────────────────── -->
+        <header class="shrink-0 px-4 sm:px-6 py-3 bg-white/80 backdrop-blur-xl border-b border-gray-200/60 flex items-center gap-3">
             <a href="/" class="flex items-center gap-3 hover:opacity-80 transition">
-                <div class="size-9 rounded-xl bg-gradient-to-br from-sky-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-sky-500/30">
+                <div class="size-9 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-600/20">
                     <HeartPulse class="size-5 text-white" />
                 </div>
                 <div>
-                    <h1 class="font-bold text-white text-base leading-tight">QuickMedAI</h1>
-                    <p class="text-sky-300/80 text-[11px]">AI tibbiy maslahat yordamchisi</p>
+                    <h1 class="font-bold text-gray-900 text-base leading-tight">QuickMedAI</h1>
+                    <p class="text-blue-500/70 text-[11px] font-medium">AI tibbiy maslahat yordamchisi</p>
                 </div>
             </a>
             <div class="ml-auto flex items-center gap-3">
                 <button
                     v-if="step === 'result'"
                     @click="restart"
-                    class="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 text-sm font-medium transition border border-sky-500/20"
+                    class="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-600 text-sm font-medium transition-colors border border-blue-200/60"
                 >
                     <RotateCcw class="size-3.5" /> Yangi savol
                 </button>
-                <a href="/login" class="text-xs text-white/40 hover:text-white/70 transition">Admin</a>
+                <a href="/login" class="text-xs text-gray-400 hover:text-gray-600 transition-colors">Admin</a>
             </div>
         </header>
 
-        <!-- Step Progress -->
-        <div class="shrink-0 px-4 sm:px-6 py-2.5 bg-white/[0.02] border-b border-white/5">
+        <!-- ─── Step Progress ──────────────────────────────────────────── -->
+        <div class="shrink-0 px-4 sm:px-6 py-2.5 bg-white/50 border-b border-gray-100">
             <div class="max-w-2xl mx-auto flex items-center gap-1">
                 <template v-for="(s, i) in STEPS" :key="s.key">
                     <div class="flex items-center gap-1.5">
                         <div :class="[
                             'size-7 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-300',
                             i < currentStepIndex
-                                ? 'bg-sky-500 text-white shadow-md shadow-sky-500/30'
+                                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
                                 : i === currentStepIndex
-                                    ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 ring-2 ring-sky-500/20'
-                                    : 'bg-white/5 text-white/20 border border-white/5'
+                                    ? 'bg-blue-50 text-blue-600 border border-blue-200 ring-2 ring-blue-100'
+                                    : 'bg-gray-100 text-gray-300 border border-gray-200/60'
                         ]">
                             <Check v-if="i < currentStepIndex" class="size-3.5" />
                             <component v-else :is="s.icon" class="size-3.5" />
                         </div>
                         <span :class="[
                             'text-[11px] font-medium hidden sm:inline transition-colors',
-                            i <= currentStepIndex ? 'text-white/70' : 'text-white/20'
+                            i <= currentStepIndex ? 'text-gray-600' : 'text-gray-300'
                         ]">{{ s.label }}</span>
                     </div>
                     <div v-if="i < STEPS.length - 1" :class="[
                         'flex-1 h-px transition-colors duration-300',
-                        i < currentStepIndex ? 'bg-sky-500/50' : 'bg-white/5'
+                        i < currentStepIndex ? 'bg-blue-400/50' : 'bg-gray-200'
                     ]" />
                 </template>
             </div>
         </div>
 
-        <!-- Body: chat + sidebar -->
+        <!-- ─── Body: chat + sidebar ───────────────────────────────────── -->
         <div class="flex-1 flex overflow-hidden">
             <!-- Chat area -->
             <div class="flex-1 flex flex-col overflow-hidden">
@@ -393,10 +393,10 @@ const currentStepIndex = computed(() => {
                         <div v-for="msg in messages" :key="msg.id" :class="['flex gap-3', msg.role === 'user' ? 'flex-row-reverse' : 'flex-row']">
                             <!-- Avatar -->
                             <div :class="[
-                                'shrink-0 size-8 rounded-xl flex items-center justify-center text-sm',
+                                'shrink-0 size-8 rounded-xl flex items-center justify-center text-sm shadow-sm',
                                 msg.role === 'ai'
-                                    ? 'bg-gradient-to-br from-sky-500 to-cyan-400 shadow-lg shadow-sky-500/20'
-                                    : 'bg-gradient-to-br from-emerald-500 to-teal-400 shadow-lg shadow-emerald-500/20'
+                                    ? 'bg-gradient-to-br from-blue-600 to-cyan-500 text-white'
+                                    : 'bg-gradient-to-br from-emerald-500 to-teal-400 text-white'
                             ]">
                                 <Bot v-if="msg.role === 'ai'" class="size-4" />
                                 <User v-else class="size-4" />
@@ -406,14 +406,14 @@ const currentStepIndex = computed(() => {
                             <div :class="['max-w-[80%] sm:max-w-[70%]', msg.role === 'user' ? 'items-end' : 'items-start', 'flex flex-col gap-2']">
 
                                 <!-- Loading -->
-                                <div v-if="msg.type === 'loading'" class="flex items-center gap-2 px-4 py-3 rounded-2xl bg-white/10 text-sky-200 text-sm">
+                                <div v-if="msg.type === 'loading'" class="flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-white border border-gray-100 text-blue-600 text-sm shadow-sm">
                                     <Loader2 class="size-4 animate-spin" />
-                                    {{ msg.content }}
+                                    <span class="text-gray-600">{{ msg.content }}</span>
                                 </div>
 
                                 <!-- Error -->
-                                <div v-else-if="msg.type === 'error'" class="flex items-start gap-2 px-4 py-3 rounded-2xl bg-red-500/20 border border-red-500/30 text-red-200 text-sm">
-                                    <AlertTriangle class="size-4 shrink-0 mt-0.5" />
+                                <div v-else-if="msg.type === 'error'" class="flex items-start gap-2.5 px-4 py-3 rounded-2xl bg-red-50 border border-red-200/60 text-red-700 text-sm">
+                                    <AlertTriangle class="size-4 shrink-0 mt-0.5 text-red-500" />
                                     {{ msg.content }}
                                 </div>
 
@@ -421,15 +421,15 @@ const currentStepIndex = computed(() => {
                                 <div v-else-if="msg.type === 'text'" :class="[
                                     'px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-line',
                                     msg.role === 'ai'
-                                        ? 'bg-white/10 text-white'
-                                        : 'bg-sky-500 text-white shadow-lg shadow-sky-500/20'
+                                        ? 'bg-white border border-gray-100 text-gray-700 shadow-sm'
+                                        : 'bg-blue-600 text-white shadow-md shadow-blue-600/15'
                                 ]">
                                     {{ msg.content }}
                                 </div>
 
                                 <!-- Options (buttons) -->
                                 <template v-else-if="msg.type === 'options'">
-                                    <div v-if="msg.content" class="px-4 py-3 rounded-2xl bg-white/10 backdrop-blur-sm text-white text-sm leading-relaxed">
+                                    <div v-if="msg.content" class="px-4 py-3 rounded-2xl bg-white border border-gray-100 text-gray-700 text-sm leading-relaxed shadow-sm">
                                         {{ msg.content }}
                                     </div>
                                     <div class="flex flex-wrap gap-2 mt-1">
@@ -438,7 +438,7 @@ const currentStepIndex = computed(() => {
                                             :key="opt.value"
                                             @click="handleOptionClick(msg, opt.value)"
                                             :disabled="step !== 'gender' && step !== 'age' && step !== 'input_type'"
-                                            class="px-4 py-2.5 rounded-xl bg-white/[0.08] hover:bg-sky-500/30 border border-white/10 hover:border-sky-400/40 text-white text-sm transition-all duration-200 hover:shadow-lg hover:shadow-sky-500/10 disabled:opacity-30 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
+                                            class="px-4 py-2.5 rounded-xl bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 text-gray-700 hover:text-blue-600 text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-blue-100/50 disabled:opacity-30 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
                                         >
                                             {{ opt.label }}
                                         </button>
@@ -447,27 +447,29 @@ const currentStepIndex = computed(() => {
 
                                 <!-- Disease list -->
                                 <template v-else-if="msg.type === 'diseases'">
-                                    <div v-if="msg.content" class="px-4 py-3 rounded-2xl bg-white/10 text-white text-sm">
+                                    <div v-if="msg.content" class="px-4 py-3 rounded-2xl bg-white border border-gray-100 text-gray-700 text-sm shadow-sm">
                                         {{ msg.content }}
                                     </div>
                                     <!-- Search -->
-                                    <input
-                                        v-if="step === 'disease'"
-                                        v-model="diseaseSearch"
-                                        @keyup.enter="loadDiseases(1)"
-                                        placeholder="Qidirish..."
-                                        class="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-sm text-white placeholder-white/40 focus:outline-none focus:border-sky-400"
-                                    />
+                                    <div v-if="step === 'disease'" class="relative w-full">
+                                        <Search class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+                                        <input
+                                            v-model="diseaseSearch"
+                                            @keyup.enter="loadDiseases(1)"
+                                            placeholder="Kasallikni qidirish..."
+                                            class="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-gray-200 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition shadow-sm"
+                                        />
+                                    </div>
                                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                         <button
                                             v-for="d in msg.diseases"
                                             :key="d.id"
                                             @click="selectDisease(d)"
                                             :disabled="step !== 'disease'"
-                                            class="group px-3 py-3 rounded-xl bg-white/[0.06] hover:bg-sky-500/20 border border-white/10 hover:border-sky-400/40 text-left transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-sky-500/10 hover:scale-[1.02] active:scale-[0.98]"
+                                            class="group px-3 py-3 rounded-xl bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 text-left transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm hover:shadow-md hover:shadow-blue-100/50 hover:scale-[1.02] active:scale-[0.98]"
                                         >
-                                            <p class="text-sm font-medium text-white leading-tight group-hover:text-sky-100">{{ d.name }}</p>
-                                            <p v-if="d.category" class="text-[11px] text-sky-300/70 mt-1">{{ d.category }}</p>
+                                            <p class="text-sm font-medium text-gray-700 leading-tight group-hover:text-blue-600">{{ d.name }}</p>
+                                            <p v-if="d.category" class="text-[11px] text-gray-400 mt-1 group-hover:text-blue-400">{{ d.category }}</p>
                                         </button>
                                     </div>
                                     <!-- Pagination -->
@@ -475,17 +477,17 @@ const currentStepIndex = computed(() => {
                                         <button
                                             @click="loadDiseases((msg.page ?? 1) - 1)"
                                             :disabled="(msg.page ?? 1) <= 1"
-                                            class="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 transition"
+                                            class="p-1.5 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-30 transition shadow-sm"
                                         >
-                                            <ChevronLeft class="size-4" />
+                                            <ChevronLeft class="size-4 text-gray-500" />
                                         </button>
-                                        <span class="text-xs text-sky-300">{{ msg.page }} / {{ msg.total }}</span>
+                                        <span class="text-xs text-gray-500 font-medium">{{ msg.page }} / {{ msg.total }}</span>
                                         <button
                                             @click="loadDiseases((msg.page ?? 1) + 1)"
                                             :disabled="(msg.page ?? 1) >= (msg.total ?? 1)"
-                                            class="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 transition"
+                                            class="p-1.5 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-30 transition shadow-sm"
                                         >
-                                            <ChevronRight class="size-4" />
+                                            <ChevronRight class="size-4 text-gray-500" />
                                         </button>
                                     </div>
                                 </template>
@@ -493,8 +495,8 @@ const currentStepIndex = computed(() => {
                                 <!-- Result -->
                                 <template v-else-if="msg.type === 'result' && msg.result">
                                     <!-- AI analysis -->
-                                    <div class="px-5 py-5 rounded-2xl bg-gradient-to-br from-sky-500/20 to-cyan-500/10 border border-sky-400/20 text-white text-sm leading-relaxed whitespace-pre-line max-w-[90vw] sm:max-w-[60vw] backdrop-blur-sm">
-                                        <div class="flex items-center gap-2 text-sky-300 mb-3 pb-3 border-b border-sky-400/20">
+                                    <div class="px-5 py-5 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50/50 border border-blue-200/60 text-gray-700 text-sm leading-relaxed whitespace-pre-line max-w-[90vw] sm:max-w-[60vw] shadow-sm">
+                                        <div class="flex items-center gap-2 text-blue-600 mb-3 pb-3 border-b border-blue-200/50">
                                             <HeartPulse class="size-4" />
                                             <span class="text-xs font-semibold uppercase tracking-wider">AI tahlil natijasi</span>
                                         </div>
@@ -503,31 +505,31 @@ const currentStepIndex = computed(() => {
 
                                     <!-- Doctors -->
                                     <div v-if="msg.result.doctors.length" class="space-y-2.5 w-full max-w-[60vw]">
-                                        <p class="text-xs font-semibold text-sky-300 px-1 mt-2 uppercase tracking-wider">Tavsiya etilgan shifokorlar</p>
+                                        <p class="text-xs font-semibold text-blue-600 px-1 mt-2 uppercase tracking-wider">Tavsiya etilgan shifokorlar</p>
                                         <div
                                             v-for="doc in msg.result.doctors"
                                             :key="doc.id"
-                                            class="flex items-start gap-3 px-4 py-4 rounded-2xl bg-white/[0.06] border border-white/10 hover:border-white/20 transition"
+                                            class="flex items-start gap-3 px-4 py-4 rounded-2xl bg-white border border-gray-100 hover:border-gray-200 transition shadow-sm hover:shadow-md"
                                         >
                                             <img
                                                 v-if="doc.photo"
                                                 :src="doc.photo"
-                                                class="size-10 rounded-full object-cover shrink-0"
+                                                class="size-10 rounded-full object-cover shrink-0 ring-2 ring-gray-100"
                                             />
                                             <div
                                                 v-else
-                                                class="size-10 rounded-full bg-sky-500/30 flex items-center justify-center text-sky-300 shrink-0"
+                                                class="size-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0"
                                             >
                                                 <User class="size-5" />
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <p class="font-semibold text-white text-sm">{{ doc.name }}</p>
-                                                <p v-if="doc.specialization" class="text-sky-300 text-xs">{{ doc.specialization }}</p>
-                                                <div class="flex flex-wrap gap-2 mt-2">
+                                                <p class="font-semibold text-gray-900 text-sm">{{ doc.name }}</p>
+                                                <p v-if="doc.specialization" class="text-blue-500 text-xs mt-0.5">{{ doc.specialization }}</p>
+                                                <div class="flex flex-wrap gap-2 mt-2.5">
                                                     <a
                                                         v-if="doc.phone_number"
                                                         :href="`tel:${doc.phone_number}`"
-                                                        class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 text-xs transition"
+                                                        class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 text-xs font-medium transition-colors border border-emerald-200/50"
                                                     >
                                                         <Phone class="size-3" /> {{ doc.phone_number }}
                                                     </a>
@@ -536,7 +538,7 @@ const currentStepIndex = computed(() => {
                                                         :href="doc.location_url"
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-500/20 hover:bg-sky-500/40 text-sky-300 text-xs transition"
+                                                        class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium transition-colors border border-blue-200/50"
                                                     >
                                                         <MapPin class="size-3" /> Manzil
                                                     </a>
@@ -548,7 +550,7 @@ const currentStepIndex = computed(() => {
                                     <!-- Restart -->
                                     <button
                                         @click="restart"
-                                        class="flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-400 hover:from-sky-400 hover:to-cyan-300 text-white text-sm font-semibold transition-all shadow-xl shadow-sky-500/30 mt-2 hover:scale-[1.02] active:scale-[0.98]"
+                                        class="flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-all shadow-lg shadow-blue-600/20 mt-2 hover:scale-[1.02] active:scale-[0.98]"
                                     >
                                         <RotateCcw class="size-4" /> Yangi savol berish
                                     </button>
@@ -559,8 +561,8 @@ const currentStepIndex = computed(() => {
                     <div ref="chatEnd" class="h-1" />
                 </div>
 
-                <!-- Input area -->
-                <div class="shrink-0 px-3 sm:px-6 py-3 bg-white/[0.03] backdrop-blur-xl border-t border-white/10">
+                <!-- ─── Input area ─────────────────────────────────────────── -->
+                <div class="shrink-0 px-3 sm:px-6 py-3 bg-white/70 backdrop-blur-xl border-t border-gray-200/60">
                     <!-- Text input -->
                     <div v-if="step === 'text_input'" class="flex gap-2 max-w-3xl mx-auto">
                         <textarea
@@ -568,12 +570,12 @@ const currentStepIndex = computed(() => {
                             @keydown.enter.exact.prevent="submitText"
                             rows="2"
                             placeholder="Belgilaringizni yozing... (Enter = yuborish)"
-                            class="flex-1 px-4 py-3 rounded-xl bg-white/[0.06] border border-white/10 text-white placeholder-white/30 text-sm resize-none focus:outline-none focus:border-sky-400/50 focus:ring-2 focus:ring-sky-500/20 leading-relaxed transition"
+                            class="flex-1 px-4 py-3 rounded-xl bg-white border border-gray-200 text-gray-700 placeholder-gray-400 text-sm resize-none focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 leading-relaxed transition shadow-sm"
                         />
                         <button
                             @click="submitText"
                             :disabled="!textInput.trim()"
-                            class="px-4 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-400 hover:from-sky-400 hover:to-cyan-300 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-all shadow-lg shadow-sky-500/30 hover:scale-[1.02] active:scale-[0.98]"
+                            class="px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-all shadow-lg shadow-blue-600/20 hover:scale-[1.02] active:scale-[0.98]"
                         >
                             <Send class="size-5" />
                         </button>
@@ -587,8 +589,8 @@ const currentStepIndex = computed(() => {
                             :class="[
                                 'flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold text-sm transition-all shadow-lg disabled:opacity-50',
                                 isRecording
-                                    ? 'bg-red-500 hover:bg-red-400 text-white shadow-red-500/30 animate-pulse ring-4 ring-red-500/20'
-                                    : 'bg-gradient-to-r from-sky-500 to-cyan-400 hover:from-sky-400 hover:to-cyan-300 text-white shadow-sky-500/30 hover:scale-[1.02]'
+                                    ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/25 animate-pulse ring-4 ring-red-100'
+                                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20 hover:scale-[1.02]'
                             ]"
                         >
                             <component :is="isRecording ? StopCircle : Mic" class="size-5" />
@@ -597,16 +599,23 @@ const currentStepIndex = computed(() => {
                     </div>
 
                     <!-- Hint -->
-                    <p v-else class="text-center text-white/30 text-xs py-2">
+                    <p v-else class="text-center text-gray-400 text-xs py-2">
                         Yuqoridagi variantlardan birini tanlang
+                    </p>
+
+                    <!-- Disclaimer -->
+                    <p class="text-center text-gray-400 text-[11px] mt-2 leading-relaxed max-w-xl mx-auto">
+                        <AlertTriangle class="size-3 inline-block -mt-0.5 mr-0.5 text-gray-400" />
+                        QuickMedAI xato qilishi mumkin. Bu tizim shifokor maslahatini almashtirmaydi — faqat ma'lumot berish maqsadida.
+                        Sog'lig'ingiz uchun doimo malakali shifokorga murojaat qiling.
                     </p>
                 </div>
             </div>
 
-            <!-- Sidebar: banners -->
-            <aside v-if="banners.length" class="hidden xl:flex w-80 shrink-0 flex-col border-l border-white/10 bg-white/5 overflow-y-auto">
-                <div class="px-4 py-3 border-b border-white/10">
-                    <p class="text-xs font-medium text-sky-300 uppercase tracking-wider">Reklama</p>
+            <!-- ─── Sidebar: banners ───────────────────────────────────────── -->
+            <aside v-if="banners.length" class="hidden xl:flex w-80 shrink-0 flex-col border-l border-gray-200/60 bg-white/50 overflow-y-auto">
+                <div class="px-4 py-3 border-b border-gray-100">
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Reklama</p>
                 </div>
                 <div class="p-3 space-y-3">
                     <component
@@ -616,7 +625,7 @@ const currentStepIndex = computed(() => {
                         :href="b.link ?? undefined"
                         :target="b.link ? '_blank' : undefined"
                         :rel="b.link ? 'noopener noreferrer' : undefined"
-                        class="block rounded-2xl overflow-hidden bg-white/10 border border-white/10 hover:border-sky-400/40 transition cursor-pointer"
+                        class="block rounded-2xl overflow-hidden bg-white border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all cursor-pointer"
                     >
                         <video
                             v-if="b.media_type === 'video' && b.media_url"
@@ -631,18 +640,18 @@ const currentStepIndex = computed(() => {
                             class="w-full aspect-video object-cover"
                         />
                         <div class="px-3 py-2.5">
-                            <p class="text-sm font-semibold text-white">{{ b.title }}</p>
-                            <p v-if="b.description" class="text-xs text-white/60 mt-0.5 line-clamp-2">{{ b.description }}</p>
-                            <div v-if="b.link" class="flex items-center gap-1 text-sky-400 text-xs mt-1.5">
+                            <p class="text-sm font-semibold text-gray-800">{{ b.title }}</p>
+                            <p v-if="b.description" class="text-xs text-gray-500 mt-0.5 line-clamp-2">{{ b.description }}</p>
+                            <div v-if="b.link" class="flex items-center gap-1 text-blue-500 text-xs mt-1.5 font-medium">
                                 <ExternalLink class="size-3" /> Batafsil
                             </div>
                         </div>
                     </component>
                 </div>
                 <!-- Disclaimer -->
-                <div class="mt-auto px-4 py-4 border-t border-white/10">
-                    <p class="text-[11px] text-white/30 leading-relaxed">
-                        <Cross class="size-3 inline-block mr-0.5" /> Bu platforma tibbiy maslahat o'rnini bosmaydi. Sog'liq muammolari uchun doimo malakali shifokorga murojaat qiling.
+                <div class="mt-auto px-4 py-4 border-t border-gray-100">
+                    <p class="text-[11px] text-gray-400 leading-relaxed">
+                        <Cross class="size-3 inline-block mr-0.5 text-gray-300" /> Bu platforma tibbiy maslahat o'rnini bosmaydi. Sog'liq muammolari uchun doimo malakali shifokorga murojaat qiling.
                     </p>
                 </div>
             </aside>

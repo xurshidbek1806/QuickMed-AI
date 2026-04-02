@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Banner;
 use App\Models\Disease;
 use App\Models\Recommendation;
+use App\Models\UserInteraction;
 use App\Services\OpenAIService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -49,7 +50,7 @@ class ChatController extends Controller
         }
 
         $diseases = $query->orderBy('name')
-            ->paginate(12, ['id', 'name', 'category', 'description', 'min_age', 'max_age']);
+            ->paginate(min((int) $request->query('per_page', 12), 100), ['id', 'name', 'category', 'description', 'min_age', 'max_age']);
 
         return response()->json($diseases);
     }
@@ -84,13 +85,30 @@ class ChatController extends Controller
             'gender'              => $validated['gender'],
             'age_category'        => $validated['age_category'],
             'symptoms'            => $validated['symptoms'],
+            'input_type'          => 'text',
         ];
 
         $aiResponse = $this->ai->analyzeSymptoms($context);
 
+        // Log interaction
+        UserInteraction::create([
+            'user_id'           => $request->user()?->id,
+            'disease_id'        => $disease->id,
+            'recommendation_id' => $recommendation?->id,
+            'doctor_id'         => $recommendation?->doctor?->id,
+            'interaction_type'  => 'chat_analyze',
+            'input_text'        => $validated['symptoms'],
+            'input_type'        => 'text',
+            'ai_response'       => $aiResponse,
+            'gender'            => $validated['gender'],
+            'age_category'      => $validated['age_category'],
+            'ip_address'        => $request->ip(),
+            'user_agent'        => $request->userAgent(),
+        ]);
+
         $doctors = $disease->recommendations()
             ->active()
-            ->with('doctor')
+            ->with('doctor.clinic')
             ->whereHas('doctor', fn($q) => $q->active())
             ->orderBy('priority', 'desc')
             ->get()
@@ -104,6 +122,8 @@ class ChatController extends Controller
                 'phone_number'   => $d->phone_number,
                 'location_url'   => $d->location_url,
                 'photo'          => $d->photo ? asset('storage/' . $d->photo) : null,
+                'clinic_name'    => $d->clinic?->name ?? '',
+                'experience'     => $d->experience ?? null,
             ]);
 
         return response()->json([
@@ -131,6 +151,17 @@ class ChatController extends Controller
         if (empty($text)) {
             return response()->json(['error' => "Ovozni tanib bo'lmadi. Qaytadan urinib ko'ring."], 422);
         }
+
+        // Log voice interaction
+        UserInteraction::create([
+            'user_id'          => $request->user()?->id,
+            'interaction_type' => 'voice_transcribe',
+            'input_text'       => '[audio file]',
+            'input_type'       => 'voice',
+            'ai_response'      => $text,
+            'ip_address'       => $request->ip(),
+            'user_agent'       => $request->userAgent(),
+        ]);
 
         return response()->json(['text' => $text]);
     }

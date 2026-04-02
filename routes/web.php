@@ -13,13 +13,7 @@ Route::get('/', function () {
 // Chat page (for logged-in users or kept for mobile web fallback)
 Route::get('/chat', [ChatController::class, 'index'])->name('chat');
 
-// Chat JSON API (web + mobile)
-Route::prefix('api')->name('api.')->group(function () {
-    Route::get('diseases', [ChatController::class, 'getDiseases'])->name('diseases');
-    Route::post('chat/analyze', [ChatController::class, 'analyze'])->name('chat.analyze');
-    Route::post('chat/voice', [ChatController::class, 'transcribeVoice'])->name('chat.voice');
-    Route::get('banners', [ChatController::class, 'getBanners'])->name('banners');
-});
+// API endpoints endi routes/api.php da (stateless, CSRF yo'q — bot/mobile uchun)
 
 // ─── Auth redirect after login ────────────────────────────────────────────────
 Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
@@ -35,6 +29,7 @@ Route::prefix('admin')
     ->name('admin.')
     ->group(function () {
         Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('export/statistics', [Admin\DashboardController::class, 'exportStatistics'])->name('export.statistics');
         Route::resource('clinics', Admin\ClinicController::class)->except('show');
         Route::resource('diseases', Admin\DiseaseController::class)->except('show');
         Route::resource('doctors', Admin\DoctorController::class)->except('show');

@@ -29,9 +29,10 @@ return [
     ],
 
     'openai' => [
-        'key'           => env('OPENAI_API_KEY'),
-        'chat_model'    => env('OPENAI_CHAT_MODEL', 'gpt-4o'),
-        'whisper_model' => env('OPENAI_WHISPER_MODEL', 'whisper-1'),
+        'key'            => env('OPENAI_API_KEY'),
+        'chat_model'     => env('OPENAI_CHAT_MODEL', 'gpt-4o'),
+        'fallback_model' => env('OPENAI_FALLBACK_MODEL', 'gpt-4o-mini'),
+        'whisper_model'  => env('OPENAI_WHISPER_MODEL', 'whisper-1'),
     ],
 
     'slack' => [

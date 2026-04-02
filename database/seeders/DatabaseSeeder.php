@@ -21,5 +21,7 @@ class DatabaseSeeder extends Seeder
                 'role'     => 'super_admin',
             ]
         );
+
+        $this->call(MedicalDataSeeder::class);
     }
 }

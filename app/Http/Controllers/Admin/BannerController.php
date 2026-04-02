@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use App\Models\Clinic;
+use App\Traits\LogsAdminActions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -13,6 +14,7 @@ use Inertia\Response;
 
 class BannerController extends Controller
 {
+    use LogsAdminActions;
     public function index(): Response
     {
         $banners = Banner::with('clinic:id,name')
@@ -52,7 +54,9 @@ class BannerController extends Controller
         }
         unset($data['media']);
 
-        Banner::create($data);
+        $banner = Banner::create($data);
+
+        $this->logCreate($banner, ['title' => $data['title']]);
 
         return redirect()->route('admin.banners.index')->with('success', "Banner qo'shildi.");
     }
@@ -92,11 +96,14 @@ class BannerController extends Controller
 
         $banner->update($data);
 
+        $this->logUpdate($banner, ['title' => $data['title']]);
+
         return redirect()->route('admin.banners.index')->with('success', "Banner yangilandi.");
     }
 
     public function destroy(Banner $banner): RedirectResponse
     {
+        $this->logDelete($banner, ['title' => $banner->title]);
         if ($banner->media_path) {
             Storage::disk('public')->delete($banner->media_path);
         }

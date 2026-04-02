@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Disease;
 use App\Models\Doctor;
 use App\Models\Recommendation;
+use App\Traits\LogsAdminActions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,6 +14,7 @@ use Inertia\Response;
 
 class RecommendationController extends Controller
 {
+    use LogsAdminActions;
     public function index(): Response
     {
         $recommendations = Recommendation::with(['disease:id,name,category', 'doctor:id,name,specialization'])
@@ -40,7 +42,9 @@ class RecommendationController extends Controller
             'is_active'           => ['boolean'],
         ]);
 
-        Recommendation::create($data);
+        $recommendation = Recommendation::create($data);
+
+        $this->logCreate($recommendation, ['disease_id' => $data['disease_id'], 'doctor_id' => $data['doctor_id']]);
 
         return redirect()->route('admin.recommendations.index')->with('success', "Tavsiya yaratildi.");
     }
@@ -68,11 +72,14 @@ class RecommendationController extends Controller
 
         $recommendation->update($data);
 
+        $this->logUpdate($recommendation, ['disease_id' => $data['disease_id'], 'doctor_id' => $data['doctor_id']]);
+
         return redirect()->route('admin.recommendations.index')->with('success', "Tavsiya yangilandi.");
     }
 
     public function destroy(Recommendation $recommendation): RedirectResponse
     {
+        $this->logDelete($recommendation);
         $recommendation->delete();
         return redirect()->route('admin.recommendations.index')->with('success', "Tavsiya o'chirildi.");
     }

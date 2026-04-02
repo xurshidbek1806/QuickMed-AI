@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Clinic;
 use App\Models\User;
+use App\Traits\LogsAdminActions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -13,6 +14,7 @@ use Inertia\Response;
 
 class ClinicController extends Controller
 {
+    use LogsAdminActions;
     public function index(): Response
     {
         $clinics = Clinic::withCount(['diseases', 'doctors', 'banners', 'users'])
@@ -53,13 +55,15 @@ class ClinicController extends Controller
             'is_active'   => $data['is_active'] ?? true,
         ]);
 
-        User::create([
+        $adminUser = User::create([
             'name'      => $data['admin_name'],
             'email'     => $data['admin_email'],
             'password'  => Hash::make($data['admin_password']),
             'role'      => 'clinic_admin',
             'clinic_id' => $clinic->id,
         ]);
+
+        $this->logCreate($clinic, ['name' => $data['name'], 'admin_user_id' => $adminUser->id]);
 
         return redirect()->route('admin.clinics.index')->with('success', "Shifoxona yaratildi.");
     }
@@ -84,11 +88,14 @@ class ClinicController extends Controller
 
         $clinic->update($data);
 
+        $this->logUpdate($clinic, ['name' => $data['name']]);
+
         return redirect()->route('admin.clinics.index')->with('success', "Shifoxona yangilandi.");
     }
 
     public function destroy(Clinic $clinic): RedirectResponse
     {
+        $this->logDelete($clinic, ['name' => $clinic->name]);
         $clinic->delete();
         return redirect()->route('admin.clinics.index')->with('success', "Shifoxona o'chirildi.");
     }

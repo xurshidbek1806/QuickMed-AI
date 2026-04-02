@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Clinic;
 use App\Models\Doctor;
+use App\Traits\LogsAdminActions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -13,6 +14,7 @@ use Inertia\Response;
 
 class DoctorController extends Controller
 {
+    use LogsAdminActions;
     public function index(): Response
     {
         $doctors = Doctor::with('clinic:id,name')
@@ -45,7 +47,9 @@ class DoctorController extends Controller
             $data['photo'] = $request->file('photo')->store('doctors', 'public');
         }
 
-        Doctor::create($data);
+        $doctor = Doctor::create($data);
+
+        $this->logCreate($doctor, ['name' => $data['name']]);
 
         return redirect()->route('admin.doctors.index')->with('success', "Shifokor qo'shildi.");
     }
@@ -79,11 +83,14 @@ class DoctorController extends Controller
 
         $doctor->update($data);
 
+        $this->logUpdate($doctor, ['name' => $data['name']]);
+
         return redirect()->route('admin.doctors.index')->with('success', "Shifokor yangilandi.");
     }
 
     public function destroy(Doctor $doctor): RedirectResponse
     {
+        $this->logDelete($doctor, ['name' => $doctor->name]);
         if ($doctor->photo) {
             Storage::disk('public')->delete($doctor->photo);
         }

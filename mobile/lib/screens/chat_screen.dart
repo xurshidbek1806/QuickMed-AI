@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:record/record.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../config/theme.dart';
 import '../models/message.dart';
 import '../models/doctor.dart';
@@ -20,6 +23,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _textController = TextEditingController();
   final ApiService _api = ApiService();
+  final AudioRecorder _recorder = AudioRecorder();
 
   int _step = 0; // 0=gender, 1=age, 2=disease, 3=symptoms, 4=result
   String? _gender;
@@ -29,6 +33,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   final List<ChatMessage> _messages = [];
   List<DiseaseOption> _diseases = [];
+  List<DiseaseOption> _filteredDiseases = [];
   AnalysisResult? _result;
   bool _isRecording = false;
 
@@ -52,7 +57,30 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _textController.addListener(_onTextChanged);
     _addBotMessage('Assalomu alaykum!\nMen QuickMedAI — sun\'iy intellekt yordamchingizman. Keling, avval jinsingizni tanlang.');
+  }
+
+  void _onTextChanged() {
+    if (_step == 2 && _diseases.isNotEmpty) {
+      final query = _textController.text.trim().toLowerCase();
+      setState(() {
+        if (query.length < 2) {
+          _filteredDiseases = [];
+        } else {
+          final words = query.split(RegExp(r'\s+')).where((w) => w.length >= 2).toList();
+          if (words.isEmpty) {
+            _filteredDiseases = [];
+          } else {
+            _filteredDiseases = _diseases.where((d) {
+              final name = d.name.toLowerCase();
+              final cat = d.category.toLowerCase();
+              return words.any((w) => name.contains(w) || cat.contains(w));
+            }).toList();
+          }
+        }
+      });
+    }
   }
 
   void _addBotMessage(String text) {
@@ -118,8 +146,70 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   void _selectDisease(DiseaseOption disease) {
     _diseaseId = disease.id;
     _addUserMessage(disease.name);
-    setState(() => _step = 3);
+    _textController.clear();
+    setState(() {
+      _filteredDiseases = [];
+      _step = 3;
+    });
     _addBotMessage('Endi simptomlaringizni batafsil yozib bering yoki mikrofon tugmasini bosib ovoz orqali aytib bering.');
+  }
+
+  void _handleInputSubmit() {
+    if (_step == 2) {
+      _handleDiseaseInput();
+    } else if (_step == 3) {
+      _submitSymptoms();
+    }
+  }
+
+  void _handleDiseaseInput() {
+    final text = _textController.text.trim();
+    if (text.isEmpty) return;
+
+    // Split input into words and match each word against disease names
+    final words = text.toLowerCase().split(RegExp(r'\s+')).where((w) => w.length >= 3).toList();
+    if (words.isEmpty) {
+      _addUserMessage(text);
+      _textController.clear();
+      _addBotMessage('Iltimos, kasallik nomini kiriting (kamida 3 harf).');
+      return;
+    }
+
+    // Score diseases by how many words match
+    final scored = <DiseaseOption, int>{};
+    for (final d in _diseases) {
+      final name = d.name.toLowerCase();
+      final cat = d.category.toLowerCase();
+      int score = 0;
+      for (final w in words) {
+        if (name.contains(w) || cat.contains(w)) score++;
+      }
+      if (score > 0) scored[d] = score;
+    }
+
+    // Sort by score descending
+    final matches = scored.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final matchedDiseases = matches.map((e) => e.key).toList();
+
+    if (matchedDiseases.length == 1) {
+      _selectDisease(matchedDiseases.first);
+    } else if (matchedDiseases.isNotEmpty) {
+      _addUserMessage(text);
+      _textController.clear();
+      setState(() {
+        _filteredDiseases = matchedDiseases;
+      });
+      _addBotMessage('${matchedDiseases.length} ta kasallik topildi. Birini tanlang:');
+    } else {
+      _addUserMessage(text);
+      _textController.clear();
+      // Show all diseases as fallback
+      setState(() {
+        _filteredDiseases = _diseases.take(10).toList();
+      });
+      _addBotMessage('"$text" bo\'yicha kasallik topilmadi. Quyidagilardan birini tanlang:');
+    }
   }
 
   Future<void> _submitSymptoms() async {
@@ -156,11 +246,79 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _toggleRecording() async {
-    // Simplified voice recording toggle
-    setState(() => _isRecording = !_isRecording);
-    if (!_isRecording) {
-      // Just stopped recording - in a real app, send the audio to API
-      _addBotMessage('Ovozli kiritish hozircha ishlab chiqilmoqda...');
+    if (_isRecording) {
+      // Stop recording and send to API
+      final path = await _recorder.stop();
+      setState(() => _isRecording = false);
+
+      if (path == null) {
+        _addBotMessage('Ovoz yozib olinmadi. Qayta urinib ko\'ring.');
+        return;
+      }
+
+      _addUserMessage('🎤 Ovozli xabar');
+      _addBotMessage('⏳ Ovoz tanib olinmoqda...');
+
+      try {
+        final text = await _api.transcribeVoice(path);
+        // Remove "recognizing" message
+        if (_messages.isNotEmpty) _messages.removeLast();
+
+        if (text != null && text.isNotEmpty) {
+          if (_step == 2) {
+            // Disease search step — put text in field and handle
+            _textController.text = text;
+            _handleDiseaseInput();
+          } else if (_step == 3) {
+            // Symptoms step — submit directly
+            _addUserMessage(text);
+            setState(() => _isLoading = true);
+            _addBotMessage('⏳ Tahlil qilinmoqda...');
+            try {
+              final result = await _api.analyzeSymptoms(
+                gender: _gender!,
+                age: _ageCategory!,
+                diseaseId: _diseaseId!,
+                symptoms: text,
+              );
+              setState(() {
+                _result = result;
+                _step = 4;
+                _isLoading = false;
+                _messages.removeLast();
+              });
+              _addBotMessage(result?.analysis ?? 'Natija olinmadi.');
+            } catch (e) {
+              setState(() => _isLoading = false);
+              _messages.removeLast();
+              _addBotMessage('Xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.');
+            }
+          }
+        } else {
+          _addBotMessage('Ovozni tanib bo\'lmadi. Qayta urinib ko\'ring.');
+        }
+      } catch (e) {
+        if (_messages.isNotEmpty && _messages.last.text.contains('tanib olinmoqda')) {
+          _messages.removeLast();
+        }
+        _addBotMessage('Ovozni yuborishda xatolik. Qayta urinib ko\'ring.');
+      }
+    } else {
+      // Start recording
+      final status = await Permission.microphone.request();
+      if (!status.isGranted) {
+        _addBotMessage('Mikrofon ruxsati berilmadi. Sozlamalardan ruxsat bering.');
+        return;
+      }
+
+      final dir = await getTemporaryDirectory();
+      final path = '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+
+      await _recorder.start(
+        const RecordConfig(encoder: AudioEncoder.aacLc),
+        path: path,
+      );
+      setState(() => _isRecording = true);
     }
   }
 
@@ -172,15 +330,20 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       _diseaseId = null;
       _result = null;
       _messages.clear();
+      _diseases.clear();
+      _filteredDiseases.clear();
       _isLoading = false;
+      _textController.clear();
     });
     _addBotMessage('Assalomu alaykum! 👋\nMen QuickMedAI — sun\'iy intellekt yordamchingizman. Keling, avval jinsingizni tanlang.');
   }
 
   @override
   void dispose() {
+    _textController.removeListener(_onTextChanged);
     _scrollController.dispose();
     _textController.dispose();
+    _recorder.dispose();
     super.dispose();
   }
 
@@ -391,20 +554,25 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       );
     }
 
+    // Show filtered suggestions only when user typed something
+    if (_filteredDiseases.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
-        children: _diseases.map((d) {
+        children: _filteredDiseases.take(6).map((d) {
           return OptionChip(
             label: d.name,
-            isSelected: _diseaseId == d.id,
+            isSelected: false,
             onTap: () => _selectDisease(d),
           );
         }).toList(),
       ),
-    ).animate().fadeIn(delay: 200.ms, duration: 400.ms);
+    ).animate().fadeIn(duration: 200.ms);
   }
 
   Widget _buildResultSection() {
@@ -510,10 +678,19 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildInputArea() {
-    // Gender, age, diseases and result steps have no text input
-    if (_step == 0 || _step == 1 || _step == 2 || _step == 4) {
+    // Gender, age and result steps have no text input
+    if (_step == 0 || _step == 1 || _step == 4) {
       return const SizedBox.shrink();
     }
+
+    // Wait for diseases to load before showing input at step 2
+    if (_step == 2 && _diseases.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final hintText = _step == 2
+        ? 'Kasallik nomini yozing...'
+        : 'Simptomlaringizni yozing...';
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -527,43 +704,42 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       ),
       child: Row(
         children: [
-          // Mic button (only for symptoms step)
-          if (_step == 3)
-            GestureDetector(
-              onTap: _toggleRecording,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 44,
-                height: 44,
-                margin: const EdgeInsets.only(right: 10),
-                decoration: BoxDecoration(
-                  gradient: _isRecording ? AppTheme.accentGradient : null,
+          // Mic button
+          GestureDetector(
+            onTap: _toggleRecording,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 44,
+              height: 44,
+              margin: const EdgeInsets.only(right: 10),
+              decoration: BoxDecoration(
+                gradient: _isRecording ? AppTheme.accentGradient : null,
+                color: _isRecording
+                    ? null
+                    : AppTheme.bgCard.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(13),
+                border: Border.all(
                   color: _isRecording
-                      ? null
-                      : AppTheme.bgCard.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(13),
-                  border: Border.all(
-                    color: _isRecording
-                        ? Colors.transparent
-                        : AppTheme.border.withValues(alpha: 0.3),
-                  ),
-                  boxShadow: _isRecording
-                      ? [
-                          BoxShadow(
-                            color: AppTheme.accent.withValues(alpha: 0.4),
-                            blurRadius: 12,
-                          ),
-                        ]
-                      : null,
+                      ? Colors.transparent
+                      : AppTheme.border.withValues(alpha: 0.3),
                 ),
-                child: Icon(
-                  _isRecording ? Icons.stop_rounded : Icons.mic_rounded,
-                  color:
-                      _isRecording ? Colors.white : AppTheme.textSecondary,
-                  size: 22,
-                ),
+                boxShadow: _isRecording
+                    ? [
+                        BoxShadow(
+                          color: AppTheme.accent.withValues(alpha: 0.4),
+                          blurRadius: 12,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Icon(
+                _isRecording ? Icons.stop_rounded : Icons.mic_rounded,
+                color:
+                    _isRecording ? Colors.white : AppTheme.textSecondary,
+                size: 22,
               ),
             ),
+          ),
 
           // Text input
           Expanded(
@@ -582,7 +758,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                   fontSize: 15,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Simptomlaringizni yozing...',
+                  hintText: hintText,
                   hintStyle: TextStyle(
                     color: AppTheme.textMuted.withValues(alpha: 0.5),
                     fontSize: 14,
@@ -594,9 +770,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                   ),
                 ),
                 keyboardType: TextInputType.text,
-                maxLines: 3,
+                maxLines: _step == 2 ? 1 : 3,
                 minLines: 1,
-                onSubmitted: (_) => _submitSymptoms(),
+                onSubmitted: (_) => _handleInputSubmit(),
               ),
             ),
           ),
@@ -607,7 +783,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           GestureDetector(
             onTap: _isLoading
                 ? null
-                : _submitSymptoms,
+                : _handleInputSubmit,
             child: Container(
               width: 44,
               height: 44,

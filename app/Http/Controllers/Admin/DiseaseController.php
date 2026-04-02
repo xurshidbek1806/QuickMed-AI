@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Clinic;
 use App\Models\Disease;
+use App\Traits\LogsAdminActions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,6 +13,7 @@ use Inertia\Response;
 
 class DiseaseController extends Controller
 {
+    use LogsAdminActions;
     public function index(): Response
     {
         $diseases = Disease::with('clinic:id,name')
@@ -40,7 +42,9 @@ class DiseaseController extends Controller
             'is_active'   => ['boolean'],
         ]);
 
-        Disease::create($data);
+        $disease = Disease::create($data);
+
+        $this->logCreate($disease, ['name' => $data['name']]);
 
         return redirect()->route('admin.diseases.index')->with('success', "Kasallik qo'shildi.");
     }
@@ -67,11 +71,14 @@ class DiseaseController extends Controller
 
         $disease->update($data);
 
+        $this->logUpdate($disease, ['name' => $data['name']]);
+
         return redirect()->route('admin.diseases.index')->with('success', "Kasallik yangilandi.");
     }
 
     public function destroy(Disease $disease): RedirectResponse
     {
+        $this->logDelete($disease, ['name' => $disease->name]);
         $disease->delete();
         return redirect()->route('admin.diseases.index')->with('success', "Kasallik o'chirildi.");
     }
